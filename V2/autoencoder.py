@@ -1,38 +1,24 @@
 from torch import nn
 
 
-class Autoencoder(nn.Module):
+class DenoisingAutoencoder(nn.Module):
     def __init__(self):
-        super(Autoencoder, self).__init__()
-
-        # Encoder
+        super(DenoisingAutoencoder, self).__init__()
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3, padding=1),  # Output: (32, H, W)
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),  # Downsample: (32, H/2, W/2)
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),  # Output: (64, H/2, W/2)
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2)  # Downsample: (64, H/4, W/4)
+            nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1), nn.ReLU(),
+            nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1), nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1), nn.ReLU()
         )
-
-        # Decoder
         self.decoder = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),  # Output: (64, H/4, W/4)
-            nn.ReLU(),
-            nn.Upsample(scale_factor=2),  # Upsample: (64, H/2, W/2)
-            nn.Conv2d(64, 32, kernel_size=3, padding=1),  # Output: (32, H/2, W/2)
-            nn.ReLU(),
-            nn.Upsample(scale_factor=2),  # Upsample: (32, H, W)
-            nn.Conv2d(32, 1, kernel_size=3, padding=1),  # Output: (1, H, W)
-            nn.Sigmoid()  # Normalize the output between 0 and 1
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=(0,1)), nn.ReLU(),
+            nn.ConvTranspose2d(32, 16, kernel_size=3, stride=2, padding=1, output_padding=(0,1)), nn.ReLU(),
+            nn.Upsample(size=(512, 219), mode='bilinear', align_corners=False),
+            nn.ConvTranspose2d(16, 1, kernel_size=3, stride=1, padding=1), nn.Tanh()
         )
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        return self.decoder(self.encoder(x))
 
-
-# Initialize the autoencoder model
-model = Autoencoder()
-print(model)
+if __name__ == "__main__":
+    model = DenoisingAutoencoder()
+    print(model)

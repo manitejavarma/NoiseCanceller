@@ -94,6 +94,7 @@ class Saver:
 
     def save_feature(self, feature, file_path):
         save_path = self._generate_save_path(file_path)
+
         np.save(save_path, feature)
         return save_path
 
@@ -109,8 +110,11 @@ class Saver:
             pickle.dump(data, f)
 
     def _generate_save_path(self, file_path):
+        if not os.path.exists(os.path.dirname(self.feature_save_dir)):
+            os.makedirs(os.path.dirname(self.feature_save_dir))
+
         file_name = os.path.split(file_path)[1]
-        save_path = os.path.join(self.feature_save_dir + file_name + ".npy")
+        save_path = os.path.join(self.feature_save_dir + file_name[:-3] + ".npy")
         return save_path
 
 
@@ -180,9 +184,9 @@ class PreprocessingPipeline:
         }
 
 if __name__ == "__main__":
-    FRAME_SIZE = 512
-    HOP_LENGTH = 256
-    DURATION = 0.7  # in seconds
+    FRAME_SIZE = 1024
+    HOP_LENGTH = 512
+    DURATION = 7  # in seconds
     SAMPLE_RATE = 16000
     MONO = True
 
