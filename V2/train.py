@@ -7,8 +7,11 @@ from torch.utils.tensorboard import SummaryWriter
 from V2.autoencoder import DenoisingAutoencoder
 from V2.custom_dataloader import create_data_loader
 from V2.custom_dataset import AudioDataSetCustom
+from V2.model_manager import ModelManager
+from V2.unet import UNet
 from V2.utilities import setup_device, get_clean_noise_paths
 from sklearn.model_selection import train_test_split
+
 
 def train_step(model, data_loader, loss_fn, optimizer, epoch):
     model.train()
@@ -35,20 +38,11 @@ def eval_model(model, data_loader, loss_fn):
     return loss / len(data_loader)
 
 
-# Model Persistence
-def save_model(model, path):
-    torch.save(model.state_dict(), path)
-
-
-def load_model(model, path):
-    model.load_state_dict(torch.load(path))
-    model.eval()
-
-
 # Main Training Loop
 def train(model, train_loader, test_loader, optimizer, criterion, epochs):
     writer = SummaryWriter()
     for epoch in range(epochs):
+        torch.cuda.empty_cache()
         train_loss = train_step(model, train_loader, criterion, optimizer, epoch)
         test_loss = eval_model(model, test_loader, criterion)
         writer.add_scalar("Loss/train", train_loss, epoch)
@@ -64,7 +58,7 @@ def load_hyperparameters():
         "sample_rate": 16000,
         "mono": True,
         "epochs": 30,
-        "batch_size": 128,
+        "batch_size": 64,
         "learning_rate": 0.001
     }
 
@@ -87,8 +81,25 @@ if __name__ == "__main__":
     train_dataset = create_data_loader(clean_train, noisy_train, hyperparameters['batch_size'])
     test_dataset = create_data_loader(clean_test, noisy_test, hyperparameters['batch_size'], shuffle=False)
 
-    model = DenoisingAutoencoder().to(device)
+    # model = DenoisingAutoencoder().to(device)
+    model = UNet().to(device)
+    for layer in model.children():
+        layer.to(device)
+    for name, param in model.named_parameters():
+        print(f"Layer: {name}, Device: {param.device}")
+
     optimizer = optim.Adam(model.parameters(), lr=hyperparameters['learning_rate'])
     criterion = nn.MSELoss()
 
+    print("Model weights are in " , next(model.parameters()).device)
+
+    devices = {param.device for param in model.parameters()}
+    print(devices)
+
+    print("And device is " + device)
+
     train(model, train_dataset, test_dataset, optimizer, criterion, hyperparameters['epochs'])
+
+    #Save Model
+    modelManager = ModelManager(model, "UNet2")
+    modelManager.save()

@@ -162,7 +162,7 @@ class PreprocessingPipeline:
         signal = self.loader.load(file_path)
         if self._is_padding_necessary(signal):
             signal = self._apply_padding(signal)
-        feature = self.extractor.extract(signal)
+        feature = self.extractor.extract(signal)[:,:-3]
         norm_feature = self.normaliser.normalise(feature)
         save_path = self.saver.save_feature(norm_feature, file_path)
         self._store_min_max_value(save_path, feature.min(), feature.max())
