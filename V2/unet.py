@@ -7,7 +7,7 @@ import torch.nn as nn
 
 
 class UNet(nn.Module):
-    def __init__(self, chnls_in=1, chnls_out=1, device="cuda"):
+    def __init__(self, chnls_in=2, chnls_out=2, device="cuda"):
         super(UNet, self).__init__()
         self.device = device
         self.down_conv_layer_1 = DownConvBlock(chnls_in, 64, norm=False).to(device) # 128,1,512,216  -> 128,64 , 256, 108
@@ -20,12 +20,12 @@ class UNet(nn.Module):
         self.up_conv_layer_1 = UpConvBlock(256, 256, kernel_size=(2, 2), stride=2, padding=0, dropout=0.5).to(device)
         self.up_conv_layer_2 = UpConvBlock(512, 256, kernel_size=(2, 3), stride=2, padding=0, dropout=0.5).to(device)
         self.up_conv_layer_3 = UpConvBlock(512, 256, kernel_size=(2, 3), stride=2, padding=0, dropout=0.5).to(device)
-        self.up_conv_layer_4 = UpConvBlock(512, 128, dropout=0.5).to(device)
-        self.up_conv_layer_5 = UpConvBlock(256, 64).to(device)
+        self.up_conv_layer_4 = UpConvBlock(512, 128, kernel_size=(2,2), stride=2, padding=0, dropout=0.5).to(device)
+        self.up_conv_layer_5 = UpConvBlock(256, 64, kernel_size=(2, 3), stride=2, padding=0, dropout=0.5).to(device)
 
         self.upsample_layer = nn.Upsample(scale_factor=2).to(device)
         self.zero_pad = nn.ZeroPad2d((1, 0, 1, 0)).to(device)
-        self.conv_layer_1 = nn.Conv2d(128, chnls_out, 4, padding=1).to(device)
+        self.conv_layer_1 = nn.Conv2d(128, chnls_out, 3, padding=1).to(device)
         self.activation = nn.Tanh().to(device)
 
     def forward(self, x):

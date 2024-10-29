@@ -61,7 +61,7 @@ class LogSpectrogramExtractor:
     def extract(self, signal):
         stft = librosa.stft(signal,
                             n_fft=self.frame_size,
-                            hop_length=self.hop_length)[:-1]
+                            hop_length=self.hop_length)
         spectrogram = np.abs(stft)
         phase = np.angle(stft)
         log_spectrogram = librosa.amplitude_to_db(spectrogram)

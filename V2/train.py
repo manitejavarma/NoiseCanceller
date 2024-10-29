@@ -4,9 +4,7 @@ import torch
 from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
-from V2.autoencoder import DenoisingAutoencoder
 from V2.custom_dataloader import create_data_loader
-from V2.custom_dataset import AudioDataSetCustom
 from V2.model_manager import ModelManager
 from V2.unet import UNet
 from V2.utilities import setup_device, get_clean_noise_paths
@@ -83,19 +81,16 @@ if __name__ == "__main__":
 
     # model = DenoisingAutoencoder().to(device)
     model = UNet().to(device)
-    for layer in model.children():
-        layer.to(device)
-    for name, param in model.named_parameters():
-        print(f"Layer: {name}, Device: {param.device}")
+    # for layer in model.children():
+    #     layer.to(device)
+    # for name, param in model.named_parameters():
+    #     print(f"Layer: {name}, Device: {param.device}")
 
     optimizer = optim.Adam(model.parameters(), lr=hyperparameters['learning_rate'])
     criterion = nn.MSELoss()
 
-
-
-
     train(model, train_dataset, test_dataset, optimizer, criterion, hyperparameters['epochs'], device)
 
     #Save Model
-    modelManager = ModelManager(model, "UNet2")
+    modelManager = ModelManager(model, "UNetPhase")
     modelManager.save()

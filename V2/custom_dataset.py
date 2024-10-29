@@ -14,5 +14,5 @@ class AudioDataSetCustom(Dataset):
     def __getitem__(self, index):
         clean_speech = load_spectrogram(self.clean_speech_paths[index])
         noisy_speech = load_spectrogram(self.noisy_speech_paths[index])
-        return clean_speech.unsqueeze(0), noisy_speech.unsqueeze(0)
+        return clean_speech, noisy_speech
 
