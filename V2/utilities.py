@@ -4,6 +4,8 @@ import os
 import numpy as np
 import torch
 
+from V2.sound_generator import SoundGenerator
+
 
 def load_spectrogram(path):
     spectrogram = np.load(path, allow_pickle=True)
@@ -26,3 +28,14 @@ def get_clean_noise_paths(base_dir):
     noisy_files = [noisy_file.replace('\\', '/') for noisy_file in noisy_files]
 
     return clean_files, noisy_files
+
+
+def get_signal(spect_path, min_max_values, hop_length):
+    spect = load_spectrogram(spect_path)
+    min_max_value = min_max_values[spect_path]
+    return SoundGenerator(hop_length).generate(spect, min_max_value)
+
+
+def get_signal_from_spectrogram(spectrogram, spect_path, min_max_values, hop_length):
+    min_max_value = min_max_values[spect_path]
+    return SoundGenerator(hop_length).generate(spectrogram, min_max_value)

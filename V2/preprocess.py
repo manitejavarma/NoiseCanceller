@@ -63,8 +63,9 @@ class LogSpectrogramExtractor:
                             n_fft=self.frame_size,
                             hop_length=self.hop_length)[:-1]
         spectrogram = np.abs(stft)
+        phase = np.angle(stft)
         log_spectrogram = librosa.amplitude_to_db(spectrogram)
-        return log_spectrogram
+        return log_spectrogram, phase
 
 
 class MinMaxNormaliser:
@@ -74,15 +75,18 @@ class MinMaxNormaliser:
         self.min = min_val
         self.max = max_val
 
-    def normalise(self, array):
+    def normalise(self, array, phase):
         norm_array = (array - array.min()) / (array.max() - array.min())
         norm_array = norm_array * (self.max - self.min) + self.min
-        return norm_array
+        phase = (phase + np.pi) / (2 * np.pi)
+        phase = phase * (self.max - self.min) + self.min
+        return norm_array, phase
 
-    def denormalise(self, norm_array, original_min, original_max):
+    def denormalise(self, norm_array, original_min, original_max, norm_phase):
         array = (norm_array - self.min) / (self.max - self.min)
         array = array * (original_max - original_min) + original_min
-        return array
+        phase = (norm_phase - self.min) / (self.max - self.min)
+        return array, phase
 
 
 class Saver:
@@ -162,9 +166,10 @@ class PreprocessingPipeline:
         signal = self.loader.load(file_path)
         if self._is_padding_necessary(signal):
             signal = self._apply_padding(signal)
-        feature = self.extractor.extract(signal)[:,:-3]
-        norm_feature = self.normaliser.normalise(feature)
-        save_path = self.saver.save_feature(norm_feature, file_path)
+        feature, phase = self.extractor.extract(signal)
+        norm_feature, norm_phase = self.normaliser.normalise(feature, phase)
+        stacked_feature = np.stack((norm_feature, norm_phase), axis = 0)
+        save_path = self.saver.save_feature(stacked_feature, file_path)
         self._store_min_max_value(save_path, feature.min(), feature.max())
 
     def _is_padding_necessary(self, signal):

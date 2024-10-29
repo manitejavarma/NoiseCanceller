@@ -13,7 +13,7 @@ from V2.utilities import setup_device, get_clean_noise_paths
 from sklearn.model_selection import train_test_split
 
 
-def train_step(model, data_loader, loss_fn, optimizer, epoch):
+def train_step(model, data_loader, loss_fn, optimizer, epoch, device):
     model.train()
     train_loss = 0
     for clean_speech, noisy_speech in data_loader:
@@ -27,7 +27,7 @@ def train_step(model, data_loader, loss_fn, optimizer, epoch):
     return train_loss / len(data_loader)
 
 
-def eval_model(model, data_loader, loss_fn):
+def eval_model(model, data_loader, loss_fn, device):
     model.eval()
     loss = 0
     with torch.inference_mode():
@@ -39,12 +39,12 @@ def eval_model(model, data_loader, loss_fn):
 
 
 # Main Training Loop
-def train(model, train_loader, test_loader, optimizer, criterion, epochs):
+def train(model, train_loader, test_loader, optimizer, criterion, epochs, device):
     writer = SummaryWriter()
     for epoch in range(epochs):
         torch.cuda.empty_cache()
-        train_loss = train_step(model, train_loader, criterion, optimizer, epoch)
-        test_loss = eval_model(model, test_loader, criterion)
+        train_loss = train_step(model, train_loader, criterion, optimizer, epoch, device)
+        test_loss = eval_model(model, test_loader, criterion, device)
         writer.add_scalar("Loss/train", train_loss, epoch)
         writer.add_scalar("Loss/test", test_loss, epoch)
         print(f"Epoch {epoch + 1}/{epochs}, Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
@@ -91,14 +91,10 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), lr=hyperparameters['learning_rate'])
     criterion = nn.MSELoss()
 
-    print("Model weights are in " , next(model.parameters()).device)
 
-    devices = {param.device for param in model.parameters()}
-    print(devices)
 
-    print("And device is " + device)
 
-    train(model, train_dataset, test_dataset, optimizer, criterion, hyperparameters['epochs'])
+    train(model, train_dataset, test_dataset, optimizer, criterion, hyperparameters['epochs'], device)
 
     #Save Model
     modelManager = ModelManager(model, "UNet2")
