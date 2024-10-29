@@ -11,14 +11,12 @@ from V2.utilities import setup_device, get_clean_noise_paths, load_spectrogram, 
 from model_manager import ModelManager
 import soundfile as sf
 
-
-
-
+import torch
 
 if __name__ == '__main__':
     device = setup_device()
     model = UNet().to(device)
-    ModelManager(model, "unet").load()
+    ModelManager(model, "UNetPhase").load()
 
     hyperparameters = load_hyperparameters()
     input_dir = 'input/spectrograms/'
@@ -43,7 +41,7 @@ if __name__ == '__main__':
     # print(eval_model(model, test_dataloader, criterion, device))
 
     # get one sample spect -> send it to model -> get output -> use min max and save the spect as audio file
-    sample_number = 59
+    sample_number = 69
     # sf.write('clean_test_speech.wav',
     #          get_signal(clean_test[sample_number], min_max_values, hyperparameters['hop_length']),
     #          hyperparameters['sample_rate'])
@@ -51,20 +49,38 @@ if __name__ == '__main__':
     #          get_signal(noisy_test[sample_number], min_max_values, hyperparameters['hop_length']),
     #          hyperparameters['sample_rate'])
 
-    #with model output
-    input = load_spectrogram(noisy_test[sample_number]).unsqueeze(0).unsqueeze(0).to(device)
-    output = model(input)
+    # #with model output
+    # input = load_spectrogram(noisy_test[sample_number]).unsqueeze(0).unsqueeze(0).to(device)
+    # output = model(input)
+    #
+    # model_input_signals = get_signal_from_spectrogram(input.squeeze(0).squeeze(0).detach().cpu(),
+    #                                                   noisy_test[sample_number], min_max_values,
+    #                                                   hyperparameters['hop_length'])
+    # model_output_signals = get_signal_from_spectrogram(output.squeeze(0).squeeze(0).detach().cpu(),
+    #                                                    clean_test[sample_number],
+    #                                                    min_max_values, hyperparameters['hop_length'])
+    # sf.write('clean_test_speech.wav',
+    #          model_output_signals,
+    #          hyperparameters['sample_rate'])
+    # sf.write('noisy_test_speech.wav', model_input_signals,
+    #          hyperparameters['sample_rate'])
 
-    model_input_signals = get_signal_from_spectrogram(input.squeeze(0).squeeze(0).detach().cpu(),
+    # After phase correction
+    # get the clean signal and noisy signal from the model
+    input = load_spectrogram(noisy_test[sample_number]).unsqueeze(0).to(device)
+    with torch.no_grad():
+        output = model(input)
+
+    model_input_signals = get_signal_from_spectrogram(input.squeeze(0).detach().cpu(),
                                                       noisy_test[sample_number], min_max_values,
-                                                      hyperparameters['hop_length'])
-    model_output_signals = get_signal_from_spectrogram(output.squeeze(0).squeeze(0).detach().cpu(),
-                                                       clean_test[sample_number],
-                                                       min_max_values, hyperparameters['hop_length'])
+                                                      hyperparameters['hop_length'], phase=True)
+
+    model_output_signals = get_signal_from_spectrogram(output.squeeze(0).detach().cpu(),
+                                                       clean_test[sample_number], min_max_values,
+                                                       hyperparameters['hop_length'], phase=True)
+
     sf.write('clean_test_speech.wav',
              model_output_signals,
              hyperparameters['sample_rate'])
     sf.write('noisy_test_speech.wav', model_input_signals,
              hyperparameters['sample_rate'])
-
-

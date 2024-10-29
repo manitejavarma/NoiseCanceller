@@ -3,6 +3,7 @@ import pickle
 import torch
 from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 from V2.custom_dataloader import create_data_loader
 from V2.model_manager import ModelManager
@@ -14,7 +15,7 @@ from sklearn.model_selection import train_test_split
 def train_step(model, data_loader, loss_fn, optimizer, epoch, device):
     model.train()
     train_loss = 0
-    for clean_speech, noisy_speech in data_loader:
+    for clean_speech, noisy_speech in tqdm(data_loader, desc="Epoch {}".format(epoch + 1)):
         clean_speech, noisy_speech = clean_speech.to(device), noisy_speech.to(device)
         optimizer.zero_grad()
         output = model(noisy_speech)
@@ -53,10 +54,13 @@ def load_hyperparameters():
         "frame_size": 1024,
         "hop_length": 512,
         "duration": 7,  # in seconds
+
+
+
         "sample_rate": 16000,
         "mono": True,
         "epochs": 30,
-        "batch_size": 64,
+        "batch_size": 32,
         "learning_rate": 0.001
     }
 

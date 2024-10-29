@@ -44,7 +44,7 @@ class Padder:
 
     def right_pad(self, array, num_missing_items):
         padded_array = np.pad(array,
-                    (0, num_missing_items),
+                              (0, num_missing_items),
                               mode=self.mode)
         return padded_array
 
@@ -86,6 +86,7 @@ class MinMaxNormaliser:
         array = (norm_array - self.min) / (self.max - self.min)
         array = array * (original_max - original_min) + original_min
         phase = (norm_phase - self.min) / (self.max - self.min)
+        phase = (2 * phase - 1) * np.pi
         return array, phase
 
 
@@ -101,7 +102,6 @@ class Saver:
 
         np.save(save_path, feature)
         return save_path
-
 
     def save_min_max_values(self, min_max_values):
         save_path = os.path.join(self.min_max_values_save_dir,
@@ -168,7 +168,7 @@ class PreprocessingPipeline:
             signal = self._apply_padding(signal)
         feature, phase = self.extractor.extract(signal)
         norm_feature, norm_phase = self.normaliser.normalise(feature, phase)
-        stacked_feature = np.stack((norm_feature, norm_phase), axis = 0)
+        stacked_feature = np.stack((norm_feature, norm_phase), axis=0)
         save_path = self.saver.save_feature(stacked_feature, file_path)
         self._store_min_max_value(save_path, feature.min(), feature.max())
 
@@ -187,6 +187,7 @@ class PreprocessingPipeline:
             "min": min_val,
             "max": max_val
         }
+
 
 if __name__ == "__main__":
     FRAME_SIZE = 1024

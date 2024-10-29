@@ -36,6 +36,6 @@ def get_signal(spect_path, min_max_values, hop_length):
     return SoundGenerator(hop_length).generate(spect, min_max_value)
 
 
-def get_signal_from_spectrogram(spectrogram, spect_path, min_max_values, hop_length):
+def get_signal_from_spectrogram(spectrogram, spect_path, min_max_values, hop_length, phase = False):
     min_max_value = min_max_values[spect_path]
-    return SoundGenerator(hop_length).generate(spectrogram, min_max_value)
+    return SoundGenerator(hop_length).generate(spectrogram, min_max_value, phase)
