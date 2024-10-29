@@ -62,6 +62,12 @@ def add_random_noise_to_speech_files(clean_speech_file, file_number, noise_file_
     snr_db = np.random.randint(7, 15) #TODO: Remove reference to snr_db
     noisy_speech = add_noise_to_speech(clean_speech, noise_matched, snr_db)
 
+    # create folder if it doesn't exist
+    if not os.path.exists(noisy_speech_folder_extracted):
+        os.makedirs(noisy_speech_folder_extracted)
+    if not os.path.exists(clean_speech_folder_extracted):
+        os.makedirs(clean_speech_folder_extracted)
+
     noisy_output_file = os.path.join(noisy_speech_folder_extracted, f'noisy_speech_{file_number}.wav')
     sf.write(noisy_output_file, noisy_speech[:min_length * sampling_rate], sampling_rate)
 

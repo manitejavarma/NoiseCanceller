@@ -54,9 +54,6 @@ def load_hyperparameters():
         "frame_size": 1024,
         "hop_length": 512,
         "duration": 7,  # in seconds
-
-
-
         "sample_rate": 16000,
         "mono": True,
         "epochs": 30,

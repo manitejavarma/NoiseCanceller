@@ -206,7 +206,7 @@ if __name__ == "__main__":
     loader = Loader(SAMPLE_RATE, DURATION, MONO)
     # padder = Padder() # Todo: Check if this is necessary
     log_spectrogram_extractor = LogSpectrogramExtractor(FRAME_SIZE, HOP_LENGTH)
-    min_max_normaliser = MinMaxNormaliser(0, 1)
+    min_max_normaliser = MinMaxNormaliser(-1, 1)
     saver = Saver(CLEAN_SPECTROGRAMS_SAVE_DIR, MIN_MAX_VALUES_SAVE_DIR)
 
     preprocessing_pipeline = PreprocessingPipeline()
