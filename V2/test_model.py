@@ -4,14 +4,31 @@ from sklearn.model_selection import train_test_split
 from torch import optim, nn
 
 from V2.custom_dataloader import create_data_loader
+from V2.preprocess import PreprocessingPipeline, LogSpectrogramExtractor, FRAME_SIZE, HOP_LENGTH, MinMaxNormaliser
 from V2.sound_generator import SoundGenerator
 from V2.train import load_hyperparameters, eval_model
 from V2.unet import UNet
-from V2.utilities import setup_device, get_clean_noise_paths, load_spectrogram, get_signal_from_spectrogram
+from V2.utilities import *
 from model_manager import ModelManager
 import soundfile as sf
 
 import torch
+
+
+def clean_audio(input_audio, model, device):
+    preprocessing_pipeline = PreprocessingPipeline()
+    preprocessing_pipeline.extractor = LogSpectrogramExtractor(FRAME_SIZE, HOP_LENGTH)
+    preprocessing_pipeline.normaliser = MinMaxNormaliser(-1, 1)
+    stacked_feature, feature_min, feature_max = preprocessing_pipeline.process_audio(input_audio)
+    input = stacked_feature.unsqueeze(0).to(device)
+    output_spect = None
+    with torch.no_grad():
+        output_spect = model(input)
+    clean_signal = get_signal_from_spectrogram_min_max(output_spect.squeeze(0).detach().cpu(),
+                                                       {"min": feature_min, "max": feature_max},
+                                                       HOP_LENGTH, phase=True)
+    return clean_signal
+
 
 if __name__ == '__main__':
     device = setup_device()

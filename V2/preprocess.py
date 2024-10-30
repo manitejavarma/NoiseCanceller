@@ -172,6 +172,13 @@ class PreprocessingPipeline:
         save_path = self.saver.save_feature(stacked_feature, file_path)
         self._store_min_max_value(save_path, feature.min(), feature.max())
 
+    def process_audio(self, audio):
+        signal = self.loader.load(audio)
+        feature, phase = self.extractor.extract(signal)
+        norm_feature, norm_phase = self.normaliser.normalise(feature, phase)
+        stacked_feature = np.stack((norm_feature, norm_phase), axis=0)
+        return stacked_feature, feature.min(), feature.max()
+
     def _is_padding_necessary(self, signal):
         if len(signal) < self._num_expected_samples:
             return True
